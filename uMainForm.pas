@@ -50,6 +50,9 @@ type
     FFallingBulb: TChristmasBulb;
     FOrnamentFiles: TStringList;
     FBreakSoundFiles: TStringList;
+    {$IFDEF DEBUG}
+    FShownDocsPath: Boolean;
+    {$ENDIF}
     function GetResourcePath: string;
     procedure LoadTreeImage;
     procedure LoadOrnamentFiles;
@@ -58,7 +61,6 @@ type
     procedure CreateBulbs;
     procedure OnBulbClick(Sender: TObject);
     procedure PlayBreakSound;
-  public
   end;
 
 var
@@ -206,6 +208,10 @@ begin
 
   FallTimer.Interval := 100;
   FallTimer.Enabled := False;
+
+  {$IFDEF DEBUG}
+  FShownDocsPath := False;
+  {$ENDIF}
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
@@ -217,20 +223,22 @@ end;
 
 function TMainForm.GetResourcePath: string;
 begin
-  {$IF DEFINED(MSWINDOWS)}
-  // Windows: resources in same directory as executable
-  Result := TPath.GetDirectoryName(ParamStr(0));
-  {$ELSEIF DEFINED(ANDROID)}
+  {$IF DEFINED(ANDROID) OR DEFINED(IOS)}
   // Android: resources in assets/internal folder
+  // iOS: resources in app's documents
   Result := TPath.GetDocumentsPath;
+  {$IFDEF DEBUG}
+  if not FShownDocsPath then begin
+    ShowMessage({$IFDEF ANDROID} 'Android' {$ELSE} 'iOS' {$ENDIF} + ' docs path: ' + Result);
+    FShownDocsPath := True;
+  end;
+  {$ENDIF}
+  {$ELSEIF DEFINED(MSWINDOWS) OR DEFINED(OSX)}
+  // Windows: resources in same directory as executable
+  // Mac OSX: resources in Content\MacOS structure
+  Result := TPath.GetAppPath;
   {$ELSE}
-    {$IF DEFINED(MACOS) OR DEFINED(IOS)}
-    // iOS/macOS: resources in documents
-    Result := TPath.GetDocumentsPath;
-    showmessage('ios/mac path: ' + result);
-    {$ENDIF}
-  {$ELSE}
-  {$MESSAGE FATAL 'Platform Not Supported'}
+  {$MESSAGE FATAL 'Unsupported platform'}
   {$ENDIF}
 end;
 
@@ -246,8 +254,8 @@ begin
   SearchPattern := 'glass-break-*.wav';  // Windows uses WAV
   {$ELSEIF DEFINED(ANDROID)}
   SearchPattern := 'glass-break-*.mp3';  // Android uses MP3
-  {$ELSEIF DEFINED(IOS) OR DEFINED(MACOS)}
-  SearchPattern := 'glass-break-*.caf';  // iOS/macOS uses CAF
+  {$ELSEIF DEFINED(IOS) OR DEFINED(OSX)}
+  SearchPattern := 'glass-break-*.caf';  // Apple uses CAF
   {$ENDIF}
 
   // Find all glass-break sound files from platform-appropriate path
@@ -286,11 +294,13 @@ begin
 end;
 
 procedure TMainForm.LoadTreeImage;
+const
+  TREE_FILENAME = 'ChristmasTree.png';
 var
   TreeFile: string;
 begin
   // Load the Christmas tree image from platform-appropriate path
-  TreeFile := TPath.Combine(GetResourcePath, 'ChristmasTree.png');
+  TreeFile := TPath.Combine(GetResourcePath, TREE_FILENAME);
 
   if FileExists(TreeFile) then
   begin
@@ -298,7 +308,7 @@ begin
     TreeImage.SendToBack; // Make sure image is behind ornaments and lights
   end
   else
-    ShowMessage('ChristmasTree.png not found in: ' + GetResourcePath);
+    ShowMessage(TREE_FILENAME + ' not found in: ' + GetResourcePath);
 end;
 
 procedure TMainForm.LoadOrnamentFiles;
