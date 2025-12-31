@@ -58,7 +58,7 @@ Remember: When you add custom image files, you have to add them to the project's
 
 The bulk of this program was written with Claude Code and actually ran on Windows before I touched a line of code. To get it to work on other platforms required significantly more work (mostly configuration, not more code), especially when learning where to store and how to access the various image and sound files on Android and iOS devices. It's the main reason this program exists: to serve as a reminder and tutorial of how to write one Delphi program that accesses external files on multiple platforms.
 
-*A blog is being written that talks about the process of building this app and will be referenced here when finished.*
+To understand more about why this app was written (rather than just a silly past-time) and the lessons it taught, read the [Blog](https://corneliusconcepts.tech/simple-christmas-tree-app) and learn about the journey this seemingly simple app took.
 
 ## License
 
